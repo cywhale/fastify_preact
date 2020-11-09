@@ -1,0 +1,27 @@
+#ignore node_modules
+**/node_modules
+pub
+ver_bak
+coverage
+data
+**/.vscode
+**/*.bak
+**/*~
+**/*.save
+**/*.swp
+**/*.log
+.DS_Store
+**/.credentials.*
+build
+**/build
+**/ssr-build/
+**/.config.*
+.eslintrc.*
+**/*.pem
+**/*.key
+**/*.cert
+*.lock
+../.env
+**/.cache
+**/size-plugin.json
+
