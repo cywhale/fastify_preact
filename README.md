@@ -1,13 +1,18 @@
-A nodejs server with fastify framework and preactjs in client.
+# MFPN
 
-#### simplified to test my openocean app, and combined from all_it_learning/node_fastify and js/preact_client
+1. MongoDB - Fastify - Preact - Nodejs trial.
 
-# fastify server
+1. simplified to test my openocean app, and combined from all_it_learning/node_fastify and js/preact_client
+
+2. can easily replace client codebase by ui/build 
+
+## fastify server
+
 nodemon server/server.js
 
-# preactjs client
+## preactjs client
 
-## CLI Commands
+#### CLI Commands
 
 ``` bash
 # install dependencies
