@@ -2,9 +2,9 @@
   "name": "node_fastify",
   "version": "1.0.2",
   "description": "fastify REST api with preact-client",
-  "main": "server/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,7 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "boom": "^7.3.0",
-    "fastify": "^3.7.0",
+    "fastify": "^3.9.1",
+    "fastify-cookie": "^4.1.1",
     "fastify-plugin": "^1.6.1",
     "fastify-static": "^3.3.0",
     "fs": "0.0.1-security",

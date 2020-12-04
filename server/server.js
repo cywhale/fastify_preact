@@ -8,7 +8,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const db = require("./config/db")
 const routes = require("./routes/postRoutes");
-
+/*
 async function configSecServ(certDir='config') {
   const readCertFile = (filename) => {
     return fs.readFileSync(path.join(__dirname, certDir, filename));
@@ -22,17 +22,41 @@ async function configSecServ(certDir='config') {
     process.exit(1)
   }
 }
-
+*/
 const startServer = async () => {
 
-  const {key, cert, allowHTTP1} = await configSecServ();
+//const {key, cert, allowHTTP1} = await configSecServ();
   const app = fastify({
-      http2: true,
+      //http2: true,
       trustProxy: true,
-      https: {key, cert, allowHTTP1},
+//    https: {key, cert, allowHTTP1},
       logger: true
   })
+/*
+  try {
+    await app.register(require('fastify-cors'), {
+      origin: 'http://localhost:3000',
+      optionsSuccessStatus: 200
+    });
+  } catch {
+    app.log.info('Try cors error');
+  }
 
+
+  try {
+    app.get(function(req, res, next) {
+      res.header('Content-Type', 'application/json;charset=UTF-8')
+      res.header('Access-Control-Allow-Credentials', true)
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept'
+      )
+      next()
+    })
+  } catch {
+    app.log.info('Try cors set header got error');
+  }
+*/
 //https://web.dev/codelab-text-compression-brotli
   try {
     await app.get('*.js', (req, res, next) => {
@@ -58,7 +82,7 @@ const startServer = async () => {
       root: path.join(__dirname, '..', 'client/build'),
       prefix: '/',
       prefixAvoidTrailingSlash: true,
-      list: true /*{
+      list: true /*{ //true
         format: 'html',
         names: ['index', 'index.html', '/']
       }*/
@@ -72,6 +96,40 @@ const startServer = async () => {
    //app.use(db())
   } catch {
     app.log.info('Try connect db error');
+  }
+
+  try {
+    await app.register(require('fastify-cookie'), {
+      secret: "just-test-secret",
+      parseOptions: {}
+    });
+  } catch {
+    app.log.info('Try reg cookie error');
+  }
+
+  try {
+    await app.get("/sessioninfo", function(req, res){
+      const aCookie = req.cookies.cookiepolycyagree;
+      console.log("req cookies: ", aCookie);
+      //const bCookie = res.unsignCookie(req.cookies.cookieSigned);
+      //console.log("reply cookie: ", bCookie);
+      res
+        .setCookie('cookiepolycyagree', '555', {
+          //domain: 'example.com',
+          //secure: true,
+          //httpOnly: false,
+          signed: true,
+          path: '/'
+        }) /*
+        .setCookie('test-signed', '0123', {
+          path: '/',
+          signed: true
+        }) */
+        //.set('Location', '/') //req.headers.referer || '/'
+      //next();
+    })
+  } catch (err) {
+    console.log("set cookie in sessioninfo got err: ", err);
   }
 
   try {

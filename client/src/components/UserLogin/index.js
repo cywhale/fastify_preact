@@ -7,7 +7,7 @@ import { nanoid } from 'nanoid';
 //import { createBrowserHistory } from 'history';
 //import Redirect from '../Redirect';
 import Popup from 'async!../Popup';
-import style from './style';
+import style from './style.scss';
 const { odbConfig } = require('./.ssologin.js');
 
 const UserLogin = () => {
