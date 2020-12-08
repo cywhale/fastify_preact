@@ -15,15 +15,68 @@ const UserCookies = () => {
   });
   const cookies = new Cookies();
   const cookieRef = useRef(null);
+  const cookieOpts = {
+    path: "/",
+    //expires: new Date(2020, 10, 20, 14, 20, 0, 30),
+    //secure: true
+  };
+  const axiosOpts = {
+    headers: {
+      "content-Type": "application/json",
+      "Accept": "/",
+      "Cache-Control": "no-cache"
+//    "Cookie": cookies
+    },
+    credentials: "include", //"same-origin" //redirect: "follow" //mode: 'same-origin' in fetch
+    withCredentials: true
+  };
 
-  const getCookies = async () => {
+  const setNoSecCookie = (c) => {
+    //console.log('setcookies before:', cookies); //document.cookie);
+    let cookie = c.split('=');//document.cookie;
+    //document.cookie = cookies + ';' + c;
+    cookies.set(cookie[0], cookie[1], cookieOpts);
+    //console.log('setcookies after:', cookies.get(cookie[0], { doNotParse: true }));
+  };
+
+//https://stackoverflow.com/questions/36824106/express-doesnt-set-a-cookie/42735038
+  const initSession = async () => {
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Accept', 'application/json');
+
+    fetch('/sessioninfo', {
+      method: 'POST',
+      mode: 'same-origin',
+      redirect: 'follow',
+      credentials: 'include', // Don't forget to specify this if you need cookies
+      withCredentials: true,
+      headers: headers,
+      body: JSON.stringify({
+        cookies: 'guest',
+        value: 'true'
+      })
+    })
+    .then((res) => {
+      console.log("Debug get cookie response: ", res);
+      return(
+          setCookie((preState) => ({
+            ...preState,
+            res: res,
+            state: 'done',
+          }))
+      )
+    });
+  };
+
+  const initSessionx = async () => {
     try {
-        const res = await axios.get("/sessioninfo", {
+        const res = await axios.get("/sessioninfo", axiosOpts /*, {
             headers: {
                 Cookie: "cookiepolycyagree=true;" //cookie2=value;
             },
-            withCredentials:true
-        }) //.then...
+            withCredentials:true }*/
+          ) //.then...
         console.log("Debug get cookie response: ", res);
         return(
           setCookie((preState) => ({
@@ -48,9 +101,10 @@ const UserCookies = () => {
       details: false
     });
 
-    const clickClose = async () => {
+    const clickClose = () => {
       //console.log('click close');
-      await getCookies();
+      setNoSecCookie('cookiepolycyagree=true');
+
       const d = document.getElementById('useCookies');
       render(<Nothing />, d, root);
       setShown(true);
@@ -96,6 +150,7 @@ const UserCookies = () => {
   };
 
   useEffect(() => {
+    initSession();
     initCookies();
   }, []);
 

@@ -3,6 +3,7 @@
 //v1.0.0 source: https://codesource.io/build-a-rest-service-with-fastify/
 //v1.0.1 modified by cywhale, try a fastify-server with preact client
 const fastify = require('fastify'); //Bring in Fastify
+const jwt = require('fastify-jwt');
 const fs = require('fs');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
@@ -36,12 +37,12 @@ const startServer = async () => {
   try {
     await app.register(require('fastify-cors'), {
       origin: 'http://localhost:3000',
+      credentials: true,
       optionsSuccessStatus: 200
     });
   } catch {
     app.log.info('Try cors error');
   }
-
 
   try {
     app.get(function(req, res, next) {
@@ -99,39 +100,74 @@ const startServer = async () => {
   }
 
   try {
-    await app.register(require('fastify-cookie'), {
-      secret: "just-test-secret",
-      parseOptions: {}
-    });
+    await app.register(jwt, {
+      secret: 'just-test-jwt',
+      cookie: {
+        cookieName: 'token'
+      }
+    })
   } catch {
-    app.log.info('Try reg cookie error');
+    app.log.info('Try reg fastify-jwt error');
   }
 
   try {
-    await app.get("/sessioninfo", function(req, res){
-      const aCookie = req.cookies.cookiepolycyagree;
-      console.log("req cookies: ", aCookie);
-      //const bCookie = res.unsignCookie(req.cookies.cookieSigned);
-      //console.log("reply cookie: ", bCookie);
-      res
-        .setCookie('cookiepolycyagree', '555', {
-          //domain: 'example.com',
-          //secure: true,
-          //httpOnly: false,
-          signed: true,
-          path: '/'
-        }) /*
-        .setCookie('test-signed', '0123', {
-          path: '/',
-          signed: true
-        }) */
-        //.set('Location', '/') //req.headers.referer || '/'
-      //next();
-    })
-  } catch (err) {
-    console.log("set cookie in sessioninfo got err: ", err);
+    await app.register(require('fastify-cookie')); //, {
+  //    secret: "just-test-secret",
+  //    parseOptions: {}
+  //});
+  } catch {
+    app.log.info('Try reg fastify-cookie error');
   }
 
+  try {
+    await app.post('/sessioninfo', async (req, res) => {
+      console.log('sessioninfo req: ', req);
+      const token = await res.jwtSign({
+        name: 'test1234',
+        role: ['guest', 'true']
+      });
+
+      res
+      .code(200)
+      .header('Access-Control-Allow-Origin', '*')
+      .header('Content-Type', 'application/json; charset=utf-8')
+      //res.header('Access-Control-Allow-Origin', "http://127.0.0.1:3000");
+      //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      .header( 'Access-Control-Allow-Credentials',true)
+      .setCookie('token', token, {
+        domain: 'localhost',
+        path: '/',
+        //expires: new Date(Date.now() + 999999),
+        maxAge: 1000 * 60 * 60 * 24,
+        secure: true, // send cookie over HTTPS only
+        httpOnly: true,
+        sameSite: true //'lax' // alternative CSRF protection
+      })
+      .send({'success': 'init cookie sent'})
+      //next();
+    });
+  } catch (err) {
+    app.log.info('Sent init cookie error', err);
+  }
+/*
+  try {
+    await app.addHook('onRequest', (req) => {
+      console.log("jwt verify: ", req);
+      req.jwtVerify()
+    });
+  } catch {
+    app.log.info('JWT verify error');
+  }
+
+  try {
+    await app.get('/verifycookie', (req, res) => {
+      console.log("verify cookie:", req);
+      res.send({ code: 'OK', message: 'it works!' })
+    })
+  } catch {
+    app.log.info('Cookie verify error');
+  }
+*/
   try {
     await routes.forEach((route, index) => {
       app.route(route)
@@ -140,13 +176,6 @@ const startServer = async () => {
     app.log.info('Try serve each route error');
   }
 
-/* Declare a route
-app.get("/", async () => {
-  return {
-    Message: "Fastify is On Fire"
-  }
-})
-*/
 //Funtion To run the server
   const start = async () => {
     try {
