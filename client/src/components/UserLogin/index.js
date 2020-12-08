@@ -15,13 +15,16 @@ const UserLogin = () => {
 //const history = createBrowserHistory();
   const cookieOpts = {
     path: "/",
-    expires: new Date(2020, 10, 30, 20, 20, 0, 30),
-    //secure: true
+    //expires: new Date(2020, 10, 30, 20, 20, 0, 30),
+    maxAge: 1000 * 60 * 60 * 24,
+    secure: true, //active when use https
+    sameSite: true,
   };
   const ucodelen = 32;
   const [state, setState] = useState({
     redirect: '',
-    popup: false
+    popup: false,
+    session: false,
   });
   const [user, setUser] = useState({
     name: '',
@@ -138,12 +141,45 @@ const UserLogin = () => {
     );
   };
 
+//https://stackoverflow.com/questions/36824106/express-doesnt-set-a-cookie/42735038
+  const initSession = async (ucstr) => {
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Accept', 'application/json');
+
+    fetch('/sessioninfo', {
+      method: 'POST',
+      mode: 'same-origin',
+      redirect: 'follow',
+      credentials: 'include', // Don't forget to specify this if you need cookies
+      withCredentials: true,
+      headers: headers,
+      body: JSON.stringify({
+        action: "initSession"
+        //cookies: 'ucode',
+        //value: ucstr
+      })
+    })
+    .then((res) => {
+      console.log("Debug get cookie response: ", res);
+      return(
+          setState((preState) => ({
+            ...preState,
+            //res: res,
+            session: true,
+          }))
+      )
+    });
+  };
+
   const initUcode = () => {
       let uc = checkUcode();
       if (uc === '') {
         uc = fetchingUcode(ucodelen);
         cookies.set('ucode', uc, cookieOpts);
       }
+      initSession(uc); //move from UserCookies
+
       setUcode((preState) => ({
           ...preState,
           str: uc
@@ -151,12 +187,13 @@ const UserLogin = () => {
   }
 
   useEffect(() => {
-    if (ucode.str === '') {
+  //if (ucode.str === '') {
+    if (!state.session) {
       initUcode();
     } else {
       OdbAuth(ucode.str);
     }
-  },[ucode.str]);
+  },[state.session]);
 
   return (
     <section style="display:flex;">

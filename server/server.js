@@ -7,6 +7,7 @@ const jwt = require('fastify-jwt');
 const fs = require('fs');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
+const devTestPort = 3003; // need nginx pass proxy to separate server/client to test /sessioninfo
 const db = require("./config/db")
 const routes = require("./routes/postRoutes");
 
@@ -78,18 +79,20 @@ const startServer = async () => {
     app.log.info('Try .br, .gz got error');
   }
 
-  try {
-    await app.register(require('fastify-static'), {
-      root: path.join(__dirname, '..', 'client/build'),
-      prefix: '/',
-      prefixAvoidTrailingSlash: true,
-      list: true /*{ //true
-        format: 'html',
-        names: ['index', 'index.html', '/']
-      }*/
-    });
-  } catch {
-    app.log.info('Try serve ui/build error');
+  if (PORT !== devTestPort) { // for testing
+    try {
+      await app.register(require('fastify-static'), {
+        root: path.join(__dirname, '..', 'client/build'),
+        prefix: '/',
+        prefixAvoidTrailingSlash: true,
+        list: true /*{ //true
+          format: 'html',
+          names: ['index', 'index.html', '/']
+        }*/
+      });
+    } catch {
+      app.log.info('Try serve ui/build error');
+    }
   }
 
   try {
@@ -119,16 +122,26 @@ const startServer = async () => {
     app.log.info('Try reg fastify-cookie error');
   }
 
+  const sessiondir = '/sessioninfo';
   try {
-    await app.post('/sessioninfo', async (req, res) => {
-      console.log('sessioninfo req: ', req);
-      const token = await res.jwtSign({
-        name: 'test1234',
-        role: ['guest', 'true']
-      });
+    await app.post(sessiondir, async (req, res) => {
+      //console.log('sessioninfo req: ', req);
+      const mysecret = 'test1234'
+      let token;
+      if (req.cookies.ucode && req.cookies.ucode !== '') {
+        console.log("Got sessioninfo req with ucode: ", req.cookies.ucode);
+        token = await res.jwtSign({
+          name: req.cookies.ucode + mysecret,
+          role: ['guest', 'true']
+        });
+      } else {
+        token = await res.jwtSign({
+          name: mysecret,
+          role: ['guest', 'false']
+        });
+      }
 
       res
-      .code(200)
       .header('Access-Control-Allow-Origin', '*')
       .header('Content-Type', 'application/json; charset=utf-8')
       //res.header('Access-Control-Allow-Origin', "http://127.0.0.1:3000");
@@ -143,8 +156,8 @@ const startServer = async () => {
         httpOnly: true,
         sameSite: true //'lax' // alternative CSRF protection
       })
+      .code(200)
       .send({'success': 'init cookie sent'})
-      //next();
     });
   } catch (err) {
     app.log.info('Sent init cookie error', err);
@@ -152,7 +165,7 @@ const startServer = async () => {
 /*
   try {
     await app.addHook('onRequest', (req) => {
-      console.log("jwt verify: ", req);
+      //console.log("jwt verify: ", req);
       req.jwtVerify()
     });
   } catch {
@@ -161,7 +174,7 @@ const startServer = async () => {
 
   try {
     await app.get('/verifycookie', (req, res) => {
-      console.log("verify cookie:", req);
+      //console.log("verify cookie:", req);
       res.send({ code: 'OK', message: 'it works!' })
     })
   } catch {

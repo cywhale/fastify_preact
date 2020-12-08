@@ -1,6 +1,6 @@
 import { render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import axios from 'axios'; //202012 try set cookies from server
+//import axios from 'axios'; //202012 try set cookies from server
 import Cookies from 'universal-cookie';
 import "../../style/style_usercookies.css";
 import style from "./style.css";
@@ -9,17 +9,19 @@ const UserCookies = () => {
   const Nothing = () => null;
   const [root, setRoot] = useState(null);
   const [shown, setShown] = useState(true);
-  const [cookie, setCookie] = useState({
-    res: null,
-    state: '',
-  });
+//const [cookie, setCookie] = useState({
+//  //res: null,
+//  state: false,
+//});
   const cookies = new Cookies();
   const cookieRef = useRef(null);
   const cookieOpts = {
     path: "/",
     //expires: new Date(2020, 10, 20, 14, 20, 0, 30),
-    //secure: true
+    secure: true, //active when use https
+    sameSite: true,
   };
+/*
   const axiosOpts = {
     headers: {
       "content-Type": "application/json",
@@ -30,7 +32,7 @@ const UserCookies = () => {
     credentials: "include", //"same-origin" //redirect: "follow" //mode: 'same-origin' in fetch
     withCredentials: true
   };
-
+*/
   const setNoSecCookie = (c) => {
     //console.log('setcookies before:', cookies); //document.cookie);
     let cookie = c.split('=');//document.cookie;
@@ -39,43 +41,14 @@ const UserCookies = () => {
     //console.log('setcookies after:', cookies.get(cookie[0], { doNotParse: true }));
   };
 
-//https://stackoverflow.com/questions/36824106/express-doesnt-set-a-cookie/42735038
-  const initSession = async () => {
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Accept', 'application/json');
-
-    fetch('/sessioninfo', {
-      method: 'POST',
-      mode: 'same-origin',
-      redirect: 'follow',
-      credentials: 'include', // Don't forget to specify this if you need cookies
-      withCredentials: true,
-      headers: headers,
-      body: JSON.stringify({
-        cookies: 'guest',
-        value: 'true'
-      })
-    })
-    .then((res) => {
-      console.log("Debug get cookie response: ", res);
-      return(
-          setCookie((preState) => ({
-            ...preState,
-            res: res,
-            state: 'done',
-          }))
-      )
-    });
-  };
-
+/* // move to UserLogin
   const initSessionx = async () => {
     try {
-        const res = await axios.get("/sessioninfo", axiosOpts /*, {
-            headers: {
-                Cookie: "cookiepolycyagree=true;" //cookie2=value;
-            },
-            withCredentials:true }*/
+        const res = await axios.get("/sessioninfo", axiosOpts //, {
+            //headers: {
+            //    Cookie: "cookiepolycyagree=true;" //cookie2=value;
+            //},
+            //withCredentials:true }
           ) //.then...
         console.log("Debug get cookie response: ", res);
         return(
@@ -95,7 +68,7 @@ const UserCookies = () => {
       );
     }
   };
-
+*/
   const CookiePopup = () => {
     const [popup, setPopup] = useState({
       details: false
@@ -141,16 +114,16 @@ const UserCookies = () => {
     if (!checkCookies()) {
       setShown(false);
       setRoot(render(<CookiePopup />, cookieRef.current));
-    } else {
+    } /*else {
       setCookie((preState) => ({
         ...preState,
-        state: 'existed',
+        state: true, //'existed',
       }))
-    }
+    }*/
   };
 
   useEffect(() => {
-    initSession();
+    //initSession();
     initCookies();
   }, []);
 
