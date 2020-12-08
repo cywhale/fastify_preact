@@ -56,7 +56,7 @@ const other_config = (config, env) => {
     console.log("Node env in development...");
 
     entryx = [
-      'webpack-dev-server/client?http://0.0.0.0:3000/',
+      'webpack-dev-server/client?https://0.0.0.0:3000/',
       //'webpack-dev-server/client?https://localhost:3000/',
       //https://github.com/webpack/webpack-dev-server/issues/416
       //'webpack-dev-server/client?https://' + require("os").hostname() + ':3000/',
@@ -125,13 +125,13 @@ const other_config = (config, env) => {
     },
     devServer: {
       contentBase: path.join(__dirname, 'dist'),
-      //https: true,
+      https: true,
       host : '0.0.0.0',
       //host: 'localhost',
       port: 3000,
       proxy: {
 	'**': {
-          target: 'http://0.0.0.0:3000',
+          target: 'https://0.0.0.0:3000',
           // context: () => true, //https://webpack.js.org/configuration/dev-server/#devserverproxy
           changeOrigin: true
         }
@@ -145,7 +145,7 @@ const other_config = (config, env) => {
       historyApiFallback: {
         disableDotRule: true
       },
-      public : 'localhost',
+      public : 'eco.odb.ntu.edu.tw',
       publicPath: '/',
       disableHostCheck: true,
       quiet: true,

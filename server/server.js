@@ -9,7 +9,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const db = require("./config/db")
 const routes = require("./routes/postRoutes");
-/*
+
 async function configSecServ(certDir='config') {
   const readCertFile = (filename) => {
     return fs.readFileSync(path.join(__dirname, certDir, filename));
@@ -23,14 +23,14 @@ async function configSecServ(certDir='config') {
     process.exit(1)
   }
 }
-*/
+
 const startServer = async () => {
 
-//const {key, cert, allowHTTP1} = await configSecServ();
+  const {key, cert, allowHTTP1} = await configSecServ();
   const app = fastify({
-      //http2: true,
+      http2: true,
       trustProxy: true,
-//    https: {key, cert, allowHTTP1},
+      https: {key, cert, allowHTTP1},
       logger: true
   })
 /*
@@ -135,7 +135,7 @@ const startServer = async () => {
       //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
       .header( 'Access-Control-Allow-Credentials',true)
       .setCookie('token', token, {
-        domain: 'localhost',
+        domain: 'eco.odb.ntu.edu.tw',
         path: '/',
         //expires: new Date(Date.now() + 999999),
         maxAge: 1000 * 60 * 60 * 24,

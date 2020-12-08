@@ -8,6 +8,8 @@
     "serve": "sirv build --cors --single --port 3000 --http2",
     "watch": "preact watch --config config/preact.config.js",
     "dev": "export PORT=3000 && export NODE_ENV='development' && preact watch --config config/preact.config.js",
+    "build-ssl": "cp config/template.html src/ && export NODE_ENV=production && export ENABLE_BROTLI=true && preact build --config config/preact.config_https.js --no-esm --sw --brotli true --template ./src/template.html",
+    "dev-ssl": "export PORT=3000 && export NODE_ENV='development' && preact watch --https --cert ./fullchain.pem --key ./privkey.pem --config config/preact.config_https.js",
     "lint": "eslint src",
     "test": "jest",
     "bundle_watch": "webpack-bundle-analyzer --port 4200 build/stats.json"
