@@ -2,14 +2,20 @@
 
 //v1.0.0 source: https://codesource.io/build-a-rest-service-with-fastify/
 //v1.0.1 modified by cywhale, try a fastify-server with preact client
-const fastify = require('fastify'); //Bring in Fastify
-const jwt = require('fastify-jwt');
+const fastify = require('fastify');
+//const jwt = require('fastify-jwt'); //fastify-jwt works well, try fast-jwt
+//const {createSigner, createVerifier} = require('fast-jwt'); //move to sessionJwt.js
 const fs = require('fs');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
 const devTestPort = 3003; // need nginx pass proxy to separate server/client to test /sessioninfo
-const db = require("./config/db")
-const routes = require("./routes/postRoutes");
+const db = require('./config/db')
+const routes = require('./routes/postRoutes');
+const sessionJwt = require('./config/sessionJwt');
+const { credentials } = require('./credentials');
+const { cookieSecret } = credentials
+const sessiondir = '/sessioninfo';
+const mySecret = credentials.cookieSecret;
 
 async function configSecServ(certDir='config') {
   const readCertFile = (filename) => {
@@ -101,8 +107,7 @@ const startServer = async () => {
   } catch {
     app.log.info('Try connect db error');
   }
-
-  try {
+/*try {
     await app.register(jwt, {
       secret: 'just-test-jwt',
       cookie: {
@@ -112,7 +117,7 @@ const startServer = async () => {
   } catch {
     app.log.info('Try reg fastify-jwt error');
   }
-
+*/
   try {
     await app.register(require('fastify-cookie')); //, {
   //    secret: "just-test-secret",
@@ -122,45 +127,27 @@ const startServer = async () => {
     app.log.info('Try reg fastify-cookie error');
   }
 
-  const sessiondir = '/sessioninfo';
   try {
-    await app.post(sessiondir, async (req, res) => {
-      //console.log('sessioninfo req: ', req);
-      const mysecret = 'test1234'
-      let token;
-      if (req.cookies.ucode && req.cookies.ucode !== '') {
-        console.log("Got sessioninfo req with ucode: ", req.cookies.ucode);
-        token = await res.jwtSign({
-          name: req.cookies.ucode + mysecret,
-          role: ['guest', 'true']
-        });
-      } else {
-        token = await res.jwtSign({
-          name: mysecret,
-          role: ['guest', 'false']
-        });
-      }
-
-      res
-      .header('Access-Control-Allow-Origin', '*')
-      .header('Content-Type', 'application/json; charset=utf-8')
-      //res.header('Access-Control-Allow-Origin', "http://127.0.0.1:3000");
-      //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-      .header( 'Access-Control-Allow-Credentials',true)
-      .setCookie('token', token, {
-        domain: 'eco.odb.ntu.edu.tw',
-        path: '/',
-        //expires: new Date(Date.now() + 999999),
-        maxAge: 1000 * 60 * 60 * 24,
-        secure: true, // send cookie over HTTPS only
-        httpOnly: true,
-        sameSite: true //'lax' // alternative CSRF protection
-      })
-      .code(200)
-      .send({'success': 'init cookie sent'})
+    await app.post(sessiondir + '/init', async (req, res) => {
+      sessionJwt.setToken(req, res, mySecret);
     });
   } catch (err) {
     app.log.info('Sent init cookie error', err);
+  }
+
+  try {
+    await app.post(sessiondir + '/login', async (req, res) => {
+      if (req.cookies.token) {
+        console.log("Has token...");
+        sessionJwt.verifyToken(req, res, mySecret)
+      } else {
+        //return Promise.resolve()
+        //.then(() =>
+        res.code(400).send({'fail': 'Need token in payload'})//);
+      }
+    });
+  } catch (err) {
+    app.log.info('Verify after login error', err);
   }
 /*
   try {
@@ -189,7 +176,6 @@ const startServer = async () => {
     app.log.info('Try serve each route error');
   }
 
-//Funtion To run the server
   const start = async () => {
     try {
       await app.listen(PORT)

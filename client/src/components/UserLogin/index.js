@@ -60,6 +60,30 @@ const UserLogin = () => {
     return('');
   };
 
+  const sessionInfo = async (url, action, method='POST') => {
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Accept', 'application/json');
+
+    try {
+      await fetch(url, {
+        method: method,
+        mode: 'same-origin',
+        redirect: 'follow',
+        credentials: 'include',
+        withCredentials: true,
+        headers: headers,
+        body: JSON.stringify({
+          action: action
+          //cookies: 'ucode',
+          //value: ucstr
+        })
+      })
+    } catch(err) {
+      console.log("Auth after logined fetch failed: ", err);
+    }
+  };
+
   const OdbAuth = async (ucstr) => { //useCallback(() => {
     //const checkOdbAuth = async (ucstr) => {
       const chkurl =  odbConfig.base + odbConfig.check + "?ucode=" + ucstr;
@@ -68,6 +92,7 @@ const UserLogin = () => {
        .then(sso => {
           if (sso) {
             if (sso.username && sso.username !== "") {
+              sessionInfo('/sessioninfo/login', 'verifyToken', 'POST');
               return(
                 setUser((preState) => ({
                   ...preState,
@@ -147,29 +172,33 @@ const UserLogin = () => {
     headers.append('Content-Type', 'application/json');
     headers.append('Accept', 'application/json');
 
-    fetch('/sessioninfo', {
-      method: 'POST',
-      mode: 'same-origin',
-      redirect: 'follow',
-      credentials: 'include', // Don't forget to specify this if you need cookies
-      withCredentials: true,
-      headers: headers,
-      body: JSON.stringify({
-        action: "initSession"
-        //cookies: 'ucode',
-        //value: ucstr
+    try {
+      await fetch('/sessioninfo/init', {
+        method: 'POST',
+        mode: 'same-origin',
+        redirect: 'follow',
+        credentials: 'include',
+        withCredentials: true,
+        headers: headers,
+        body: JSON.stringify({
+          action: 'initSession'
+          //cookies: 'ucode',
+          //value: ucstr
+        })
       })
-    })
-    .then((res) => {
-      console.log("Debug get cookie response: ", res);
-      return(
+      .then((res) => {
+        //console.log("Debug get cookie response: ", res);
+        return(
           setState((preState) => ({
             ...preState,
             //res: res,
             session: true,
           }))
-      )
-    });
+        )
+      });
+    } catch (err) {
+      console.log("Init session fetch failed: ", err);
+    }
   };
 
   const initUcode = () => {
