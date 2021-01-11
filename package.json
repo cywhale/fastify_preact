@@ -1,6 +1,6 @@
 {
   "name": "node_fastify",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "fastify REST api with preact-client",
   "main": "server.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "dependencies": {
     "boom": "^7.3.0",
     "fast-jwt": "^0.5.1",
-    "fastify": "^3.9.1",
+    "fastify": "^3.9.2",
     "fastify-cookie": "^4.1.1",
     "fastify-plugin": "^1.6.1",
     "fastify-static": "^3.3.0",

@@ -12,7 +12,7 @@ const devTestPort = 3003; // need nginx pass proxy to separate server/client to 
 const db = require('./config/db')
 const routes = require('./routes/postRoutes');
 const sessionJwt = require('./config/sessionJwt');
-const { credentials } = require('./credentials');
+const { credentials } = require('./config/credentials');
 const { cookieSecret } = credentials
 const sessiondir = '/sessioninfo';
 const mySecret = credentials.cookieSecret;
@@ -129,7 +129,22 @@ const startServer = async () => {
 
   try {
     await app.post(sessiondir + '/init', async (req, res) => {
-      sessionJwt.setToken(req, res, mySecret);
+      if (req.cookies.token) {
+        let verifyInit = sessionJwt.verifyToken(req, res, mySecret, 'initSession');
+
+        if (verifyInit) {
+          res.code(200).send({'success': 'Verified token already existed'});
+        } else {
+          res.code(400).send({'fail': 'Init token fail with wrong existed client token'});
+        }
+      } else {
+        //console.log("req.payload is: ", req.body);
+        if (req.body.action === 'initSession') {
+          sessionJwt.setToken(req, res, mySecret, 'initSession');
+        } else {
+          res.code(400).send({'fail': 'Init token fail with wrong client action'});
+        }
+      }
     });
   } catch (err) {
     app.log.info('Sent init cookie error', err);
@@ -138,11 +153,20 @@ const startServer = async () => {
   try {
     await app.post(sessiondir + '/login', async (req, res) => {
       if (req.cookies.token) {
-        console.log("Has token...");
-        sessionJwt.verifyToken(req, res, mySecret)
+        let verifyLogin = sessionJwt.verifyToken(req, res, mySecret, 'initSession');
+
+        if (verifyLogin) {
+          if (!req.body.user) {
+            res.code(400).send({'fail': 'Token ok but no user while login'});
+          } else {
+            res.code(200).send({'success': 'Token with user: ' + req.body.user});
+            //sessionJwt.createToken(mySecret+req.body.user, )
+          }
+        } else {
+          res.code(400).send({'fail': 'Token failed when login verified after init'});
+        }
+
       } else {
-        //return Promise.resolve()
-        //.then(() =>
         res.code(400).send({'fail': 'Need token in payload'})//);
       }
     });

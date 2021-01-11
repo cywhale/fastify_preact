@@ -1,8 +1,8 @@
 const fastifyPlugin = require('fastify-plugin')
-const { credentials } = require('../credentials')
+const { credentials } = require('./credentials')
 const mongoose = require('mongoose')
 const env = process.env.NODE_ENV || "development"
-const { connectionString } = credentials.mongo 
+const { connectionString } = credentials.mongo
 if(!connectionString) {
   console.error('MongoDB connection string missing!')
   process.exit(1)

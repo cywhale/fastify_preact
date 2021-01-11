@@ -1,7 +1,13 @@
 'use strict'
-const {createSigner, createVerifier} = require('fast-jwt'); //createDecoder
+const { createSigner, createVerifier } = require('fast-jwt'); //createDecoder
 
-exports.verifyToken = (req, res, secret) => {
+const createToken = (secret, payload) => {
+  const signSync = createSigner({key: secret});
+  const token = signSync(payload);
+  return (token);
+}
+
+exports.verifyToken = (req, res, secret, verify) => {
     //try {
       const verifySync = createVerifier({
             key: secret,
@@ -11,17 +17,17 @@ exports.verifyToken = (req, res, secret) => {
             //algorithms: ['HS256','HS384', 'HS512','RS256']
       })
 
-      const payload = verifySync(req.cookies.token) //, (err, sections) => {
-        //console.log("Verify JWT callback...");
-        //if (err && err !== '') {
-        //  console.log(err);
-        //  res.code(401).send({'fail': 'Token not vaild. ' + err});
-        //  return
-        //} else {
-          console.log(payload);
-          res.code(200).send({'success': 'Token verified'});
-        //  return next()
-        //}
+      const result = verifySync(req.cookies.token)
+//    console.log(result.payload.verify, verify);
+/*    result format is like {
+  	  header: { alg: 'HS256', typ: 'JWT' },
+  	  payload: { verify: 'initSession', iat: 1609235926 },
+  	  signature: 'CVSdy96UEm86pJCwHRClGUNO6-R4GZHSkkIP8AyZueg'
+      } */
+      return (result.payload.verify === verify);
+      //  res.code(200).send({'success': 'Token verified'});
+      //  return next()
+      //}
       //})
     /*} catch (err) {
       console.log(err);
@@ -29,17 +35,16 @@ exports.verifyToken = (req, res, secret) => {
     }*/
 }
 
-exports.setToken = (req, res, secret) => {
-      let token, signSync;
-      if (req.cookies.ucode && req.cookies.ucode !== '') {
+exports.setToken = (req, res, secret, verify) => {
+    let token, signSync;
+//  if (req.cookies.ucode && req.cookies.ucode !== '') {
 /* jwt
         token = await res.jwtSign({
           name: req.cookies.ucode + secret,
           role: ['guest', 'true']
         });*/
-        signSync = createSigner({key: secret});
-        token = signSync({role: "guest", ucode: req.cookies.ucode});
-      } else {
+    token = createToken(secret, {verify: verify}); //{role: "guest", ucode: req.cookies.ucode}
+//      } else {
 /*      token = await res.jwtSign({
           name: secret,
           role: ['guest', 'false']
@@ -48,15 +53,12 @@ exports.setToken = (req, res, secret) => {
         signSync = createSigner({key: mysecret});
         token = signSync({role: "guest", withUcode: false});
 */
-        res.code(400).send({'fail': 'Need ucode in payload'});
-      }
-
-      res
+//      res.code(400).send({'fail': 'Need ucode in payload'});
+//    }
+    res
       .header('Access-Control-Allow-Origin', '*')
       .header('Content-Type', 'application/json; charset=utf-8')
-      //res.header('Access-Control-Allow-Origin', "http://127.0.0.1:3000");
-      //res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-      .header( 'Access-Control-Allow-Credentials',true)
+      .header('Access-Control-Allow-Credentials',true)
       .setCookie('token', token, {
         domain: 'eco.odb.ntu.edu.tw',
         path: '/',
@@ -67,5 +69,5 @@ exports.setToken = (req, res, secret) => {
         sameSite: true //'lax' // alternative CSRF protection
       })
       .code(200)
-      .send({'success': 'Init cookie sent'})
+      .send({'success': 'Get token'})
 }

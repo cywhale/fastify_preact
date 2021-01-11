@@ -1,4 +1,4 @@
-import { h } from 'preact';
+//import { h } from 'preact';
 import { Router } from 'preact-router';
 import { createMemoryHistory } from 'history'; //createHashHistory
 import Header from './header';
@@ -12,7 +12,7 @@ const App = () => {
     <div id="app">
       <Header />
       <Router history={createMemoryHistory()}>
-	<Home path="/" />
+        <Home path="/" />
         <Profile path="/profile/" user="me" />
 	<Profile path="/profile/:user" />
       </Router>

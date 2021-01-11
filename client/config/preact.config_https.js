@@ -3,7 +3,7 @@ import path from 'path';
 //import CopyWebpackPlugin from 'copy-webpack-plugin';
 //const ExtractTextPlugin = require('extract-text-webpack-plugin');
 //const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const autoprefixer = require('autoprefixer');
+//const autoprefixer = require('autoprefixer');
 const { merge } = require('webpack-merge');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -29,6 +29,12 @@ const publicUrl = publicPath.slice(0, -1);
 
 const globOptions = {};
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+// https://stackoverflow.com/questions/53421773/cant-resolve-child-process-in-module-xmlhttprequest
+// https://github.com/firebase/firebase-js-sdk/issues/1478
+if (typeof XMLHttpRequest === 'undefined') {
+  global.XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+}
 
 //https://github.com/preactjs/preact-cli/blob/81c7bb23e9c00ba96da1c4b9caec0350570b8929/src/lib/webpack/webpack-client-config.js
 const other_config = (config, env) => {
@@ -72,8 +78,9 @@ const other_config = (config, env) => {
 
   return {
     //mode: prod ? "production" : "development",
-    //externals: {
-    //},
+    //externals:[{
+    //  xmlhttprequest: '{XMLHttpRequest:XMLHttpRequest}'
+    //}]
     context: __dirname,
     entry: entryx,
     output: outputx,
@@ -101,7 +108,14 @@ const other_config = (config, env) => {
       }
     },
     module: {
-        rules: [{
+        rules: [
+        { //https://github.com/storybookjs/storybook/issues/1493
+            test: /\.(js|jsx)$/,
+            exclude: [/bower_components/, /node_modules/, /styles/],
+            loader: 'babel-loader',
+            //include: path.resolve(__dirname, '../../src')
+        },
+        {
             test: /\.(css|scss)$/,
             use: [//{
                 //loader: MiniCssExtractPlugin.loader,
