@@ -65,7 +65,7 @@ const SignIn = (props) => {
       // let chktoken =
       sessionInfo('sessioninfo/login', 'logined', ucode, 'POST',
                   {action: 'logined', user: result.user.displayName},
-                  setUser);
+                  true, setUser);
       //if (chktoken) {
       return(
         setUser((preState) => ({

@@ -1,6 +1,5 @@
-
-export default async function sessionInfo(url, action, ucode, method='POST',
-                                          body={action: action}, userCallback) {
+export default async function sessionInfo(url, action, ucode, method='POST', body, //={action: action},
+                                          sendAlert, userCallback) {
     let headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Accept', 'application/json');
@@ -22,8 +21,8 @@ export default async function sessionInfo(url, action, ucode, method='POST',
           session: action,
           token: res.ok? ucode: '',
         }))
-        if (!res.ok) {
-          alert("Sorry. We have trouble when checking token authority internally. You still can login and use preferred settings that have no privacy/authroized issues. Please contact us if this situation continuously happens.");
+        if (!res.ok && sendAlert) {
+          alert("Sorry. We have trouble when checking token authority internally.\r\nYou still can login and use preferred settings that have no privacy/authroized issues.\r\nPlease contact us if this situation continuously happens.");
         }
         return(res.ok);
       });

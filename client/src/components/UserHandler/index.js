@@ -19,7 +19,7 @@ const { user, setUser } = upars;
 
   const [state, setState] = useState({
     ssostate: '',
-    //session: '',
+    alerted: false,
     //redirect: '', //move to SignIn
     //popup: false
   });
@@ -62,7 +62,7 @@ const { user, setUser } = upars;
       return (uc);
   };
 
-  const OdbAuth = useCallback(async (ucstr) => { //gencode=false
+  const OdbAuth = useCallback(async (ucstr, alerted=true) => { //gencode=false
     let ucstrx = ucstr !== undefined? ucstr: ucode.str;
     //if (gencode && ucstrx === '') ucstrx = initUcode();
     const chkurl =  odbConfig.base + odbConfig.check + "?ucode=" + ucstrx;
@@ -72,13 +72,14 @@ const { user, setUser } = upars;
           if (sso) {
             if (sso.username && sso.username !== "") {
               cookies.set('uauth', 'odb', cookieOpts);
+              sessionInfo('sessioninfo/login', 'logined', ucstr, 'POST',
+                          {action: 'logined', user: sso.username}, !alerted, setUser);
+
               setState((preState) => ({
                 ...preState,
+                alerted: true,
                 ssostate: '',
               }));
-
-              sessionInfo('sessioninfo/login', 'logined', ucstr, 'POST',
-                          {action: 'logined', user: sso.username}, setUser);
               return(
                 setUser((preState) => ({
                   ...preState,
@@ -152,7 +153,7 @@ const { user, setUser } = upars;
               cookies.set('uauth', 'gmail', cookieOpts);
               //let chktoken =
               sessionInfo('sessioninfo/login', 'logined', ucstr, 'POST',
-                          {action: 'logined', user: currUser.displayName}, setUser);
+                          {action: 'logined', user: currUser.displayName}, false, setUser);
               //if (chktoken) {
               return(
                   setUser((preState) => ({
@@ -182,7 +183,7 @@ const { user, setUser } = upars;
       if (user.session === 'initCookieSet') {
         //let chktoken =
         sessionInfo('sessioninfo/init', 'initSession', ucode.str, 'POST',
-                    {action: 'initSession'}, setUser);
+                    {action: 'initSession'}, false, setUser);
       } else if (user.session !== 'logined') {
         let uc = ucode.str;
         if (uc === '') {
@@ -191,11 +192,11 @@ const { user, setUser } = upars;
           const last_auth = checkcookie('uauth');
           if (user.auth === 'odb' || (state.ssostate != 'ssofail' && // first check ODB SSO fail or success
               (last_auth === '' || last_auth === 'odb'))) {
-            OdbAuth(uc);//uc, false
+            OdbAuth(uc, state.alerted);//uc, false
           } else {
             waitFireAuth(uc);;
           }
-          console.log("Now user state is ", user.session);
+//        console.log("Now user state is ", user.session);
 /*        setUser((preState) => ({
             ...preState,
             session: 'init',
