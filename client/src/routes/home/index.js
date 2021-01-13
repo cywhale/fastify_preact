@@ -2,7 +2,7 @@
 import style from './style.css';
 import MultiSelectSort from 'async!../../components/MultiSelectSort';
 import { UserContextProvider } from "../../components/UserHandler/UserContext";
-import UserCookies from 'async!../../components/UserHandler/UserCookies';
+//import UserCookies from 'async!../../components/UserHandler/UserCookies';
 import UserHandler from 'async!../../components/UserHandler';
 
 const Home = () => (
@@ -13,8 +13,7 @@ const Home = () => (
              <UserContextProvider>
                 <UserHandler />
              </UserContextProvider>
-             <UserCookies />
+             <div id='userCookieContainer' />
 	</div>
 );
-
 export default Home;

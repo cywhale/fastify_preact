@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 const devTestPort = 3003; // need nginx pass proxy to separate server/client to test /sessioninfo
 const db = require('./config/db')
 const routes = require('./routes/postRoutes');
-const sessionJwt = require('./config/sessionJwt');
+const sessionJwt = require('./controller/sessionJwt');
 const { credentials } = require('./config/credentials');
 const { cookieSecret } = credentials
 const sessiondir = '/sessioninfo';
@@ -26,7 +26,7 @@ async function configSecServ(certDir='config') {
       [readCertFile('privkey.pem'), readCertFile('fullchain.pem')]);
     return {key, cert, allowHTTP1: true};
   } catch {
-    console.log("Certifite error...");
+    console.log("Certifite pem error...");
     process.exit(1)
   }
 }
@@ -40,8 +40,14 @@ const startServer = async () => {
       https: {key, cert, allowHTTP1},
       logger: true
   })
-/*
+
+//fasitfy.register(plugins, opts)
   try {
+   await app.register(db);
+  } catch {
+    app.log.info('Try connect db error');
+  }
+/*try {
     await app.register(require('fastify-cors'), {
       origin: 'http://localhost:3000',
       credentials: true,
@@ -64,7 +70,27 @@ const startServer = async () => {
   } catch {
     app.log.info('Try cors set header got error');
   }
+  try {
+    await app.register(jwt, {
+      secret: 'just-test-jwt',
+      cookie: {
+        cookieName: 'token'
+      }
+    })
+  } catch {
+    app.log.info('Try reg fastify-jwt error');
+  }
 */
+  try {
+    await app.register(require('fastify-cookie')); //, {
+  //    secret: "just-test-secret",
+  //    parseOptions: {}
+  //});
+  } catch {
+    app.log.info('Try reg fastify-cookie error');
+  }
+
+//fastify.get(url, opts={schema:{...}}, handler) ==> fastify.route({method:, url:, schemal:, handler:...})
 //https://web.dev/codelab-text-compression-brotli
   try {
     await app.get('*.js', (req, res, next) => {
@@ -102,38 +128,15 @@ const startServer = async () => {
   }
 
   try {
-   await app.register(db);
-   //app.use(db())
-  } catch {
-    app.log.info('Try connect db error');
-  }
-/*try {
-    await app.register(jwt, {
-      secret: 'just-test-jwt',
-      cookie: {
-        cookieName: 'token'
-      }
-    })
-  } catch {
-    app.log.info('Try reg fastify-jwt error');
-  }
-*/
-  try {
-    await app.register(require('fastify-cookie')); //, {
-  //    secret: "just-test-secret",
-  //    parseOptions: {}
-  //});
-  } catch {
-    app.log.info('Try reg fastify-cookie error');
-  }
-
-  try {
     await app.post(sessiondir + '/init', async (req, res) => {
       if (req.cookies.token) {
         let verifyInit = sessionJwt.verifyToken(req, res, mySecret, 'initSession');
 
         if (verifyInit) {
           res.code(200).send({'success': 'Verified token already existed'});
+          if (!req.cookies.guest) {
+
+          }
         } else {
           res.code(400).send({'fail': 'Init token fail with wrong existed client token'});
         }

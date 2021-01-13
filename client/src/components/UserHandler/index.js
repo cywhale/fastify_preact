@@ -1,4 +1,4 @@
-//import { render } from 'preact';
+import { render } from 'preact';
 import { useContext, useState, useEffect, useCallback } from 'preact/hooks';
 import { UserContext } from "./UserContext"
 import Cookies from 'universal-cookie';
@@ -6,6 +6,7 @@ import { auth //, googleAuthProvider //, database
        } from '../firebase';
 import { nanoid } from 'nanoid';
 import sessionInfo from './sessionInfo';
+import UserCookies from 'async!./UserCookies';
 import SignIn from 'async!./SignIn';
 import style from './style_userhandler';
 const { odbConfig } = require('./.ssologin.js');
@@ -76,16 +77,16 @@ const { user, setUser } = upars;
                 ssostate: '',
               }));
 
-              sessionInfo('sessioninfo/login', 'logined', setUser, 'POST',
-                          {action: 'logined', user: sso.username});
+              sessionInfo('sessioninfo/login', 'logined', ucstr, 'POST',
+                          {action: 'logined', user: sso.username}, setUser);
               return(
                 setUser((preState) => ({
                   ...preState,
-                  session: 'logined',
+                  //session: 'logined',
                   name: sso.username,
                   photoURL: 'https://ecodata.odb.ntu.edu.tw/pub/icon/favicon_tw.png',
                   auth: 'odb',
-                  token: ucstrx
+                  //token: ucstrx
                 }))
               );
             }
@@ -137,52 +138,72 @@ const { user, setUser } = upars;
     );
   };
 
-  useEffect(() => {
-    const waitFireAuth = (ucstr) => {auth.onAuthStateChanged(
+  const waitCookiedivRender = () => {
+      new Promise((resolve) => {//, reject) => {
+      //try {
+        render(<UserCookies userCallback={setUser} />, document.getElementById('userCookieContainer'));
+        resolve();
+      }); //catch (err) { reject(err) }
+  };
+
+  const waitFireAuth = (ucstr) => {auth.onAuthStateChanged(
           currUser => {
             if (currUser) {
               cookies.set('uauth', 'gmail', cookieOpts);
-
-              sessionInfo('sessioninfo/login', 'logined', setUser, 'POST',
-                          {action: 'logined', user: currUser.displayName});
+              //let chktoken =
+              sessionInfo('sessioninfo/login', 'logined', ucstr, 'POST',
+                          {action: 'logined', user: currUser.displayName}, setUser);
+              //if (chktoken) {
               return(
-                setUser((preState) => ({
-                  ...preState,
-                  session: 'logined',
-                  //logined: true,
-                  name: currUser.displayName,
-                  photoURL: currUser.photoURL,
-                  auth: 'gmail',
-                  token: ucstr
-                }))
+                  setUser((preState) => ({
+                    ...preState,
+                    //session: 'logined',
+                    //logined: true,
+                    name: currUser.displayName,
+                    photoURL: currUser.photoURL,
+                    auth: 'gmail',
+                    //token: ucstr
+                  }))
               );
             }
             cookies.remove('uauth', { path: '/' });
             return(null);
           }
-    )};
+  )};
 
-    if (user.session === '') {
-      sessionInfo('sessioninfo/init', 'initSession', setUser, 'POST')
-    } else if (user.session !== 'logined') {
-      let uc = ucode.str;
-      if (uc === '') {
-        uc = initUcode();
-      } else {
-        const last_auth = checkcookie('uauth');
-        if (user.auth === 'odb' || (state.ssostate != 'ssofail' && // first check ODB SSO fail or success
-            (last_auth === '' || last_auth === 'odb'))) {
-          OdbAuth(uc);//uc, false
-        } else {
-          waitFireAuth(uc);;
-        }
-/*      setUser((preState) => ({
+  useEffect(() => {
+    if (!user.saveAgree && user.session === '') {
+      waitCookiedivRender();
+      setUser((preState) => ({
           ...preState,
-          session: 'init',
-        })); */
+          session: 'initCookieSet',
+      }));
+    } else if (user.saveAgree) {
+      if (user.session === 'initCookieSet') {
+        //let chktoken =
+        sessionInfo('sessioninfo/init', 'initSession', ucode.str, 'POST',
+                    {action: 'initSession'}, setUser);
+      } else if (user.session !== 'logined') {
+        let uc = ucode.str;
+        if (uc === '') {
+          uc = initUcode();
+        } else {
+          const last_auth = checkcookie('uauth');
+          if (user.auth === 'odb' || (state.ssostate != 'ssofail' && // first check ODB SSO fail or success
+              (last_auth === '' || last_auth === 'odb'))) {
+            OdbAuth(uc);//uc, false
+          } else {
+            waitFireAuth(uc);;
+          }
+          console.log("Now user state is ", user.session);
+/*        setUser((preState) => ({
+            ...preState,
+            session: 'init',
+          })); */
+        }
       }
     }
-  }, [state.ssostate, ucode.str, user.auth, user.session, OdbAuth]);
+  }, [state.ssostate, ucode.str, user.saveAgree, user.auth, user.session, OdbAuth]);
 
   // handleSSOChange={OdbAuth()} in prop cause SignIn recusively update? and continuouly get sso?ucode=...
   return (

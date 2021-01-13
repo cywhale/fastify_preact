@@ -1,4 +1,5 @@
 'use strict'
+const boom = require('boom');
 const { createSigner, createVerifier } = require('fast-jwt'); //createDecoder
 
 const createToken = (secret, payload) => {
@@ -35,39 +36,42 @@ exports.verifyToken = (req, res, secret, verify) => {
     }*/
 }
 
-exports.setToken = (req, res, secret, verify) => {
-    let token, signSync;
+exports.setToken = async (req, res, secret, verify) => {
 //  if (req.cookies.ucode && req.cookies.ucode !== '') {
 /* jwt
         token = await res.jwtSign({
           name: req.cookies.ucode + secret,
           role: ['guest', 'true']
         });*/
-    token = createToken(secret, {verify: verify}); //{role: "guest", ucode: req.cookies.ucode}
+  let token = createToken(secret, {verify: verify}); //{role: "guest", ucode: req.cookies.ucode}
 //      } else {
 /*      token = await res.jwtSign({
           name: secret,
           role: ['guest', 'false']
         });*/
 /*      app.log.info('Warning: No ucode to create token');
-        signSync = createSigner({key: mysecret});
+        let signSync = createSigner({key: mysecret});
         token = signSync({role: "guest", withUcode: false});
 */
 //      res.code(400).send({'fail': 'Need ucode in payload'});
 //    }
-    res
-      .header('Access-Control-Allow-Origin', '*')
+  try {
+    await res
+      .header('Access-Control-Allow-Origin', 'https://eco.odb.ntu.edu.tw')
       .header('Content-Type', 'application/json; charset=utf-8')
       .header('Access-Control-Allow-Credentials',true)
       .setCookie('token', token, {
         domain: 'eco.odb.ntu.edu.tw',
         path: '/',
         //expires: new Date(Date.now() + 999999),
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 3 * 60 * 60 * 24,
         secure: true, // send cookie over HTTPS only
         httpOnly: true,
         sameSite: true //'lax' // alternative CSRF protection
       })
       .code(200)
-      .send({'success': 'Get token'})
+      .send({'success': 'Init token'})
+  } catch (err) {
+    throw boom.boomify(err)
+  }
 }

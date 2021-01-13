@@ -18,6 +18,7 @@ const UserContextProvider = (props) => {//,...children
   const [user, setUser] = useState({
     //init: false,
     //logined: false,
+    saveAgree: false,
     session: '', //initSession, logined, ...
     name: '',
     auth: '', //odb, gmail

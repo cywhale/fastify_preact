@@ -62,17 +62,20 @@ const SignIn = (props) => {
       // This gives you a Google Access Token. You can use it to access the Google API.
       // var token = result.credential.accessToken; //We not use this token currently.
       // The signed-in user info. //var user = result.user;
-      sessionInfo('sessioninfo/login', 'logined', setUser, 'POST',
-                  {action: 'logined', user: result.user.displayName});
-
-      setUser((preState) => ({
-        ...preState,
-        session: 'logined',
-        name: result.user.displayName,
-        photoURL: result.user.photoURL,
-        auth: 'gmail',
-        token: ucode
-      }));
+      // let chktoken =
+      sessionInfo('sessioninfo/login', 'logined', ucode, 'POST',
+                  {action: 'logined', user: result.user.displayName},
+                  setUser);
+      //if (chktoken) {
+      return(
+        setUser((preState) => ({
+          ...preState,
+          //session: 'logined',
+          name: result.user.displayName,
+          photoURL: result.user.photoURL,
+          auth: 'gmail',
+        }))
+      );
     }).catch((error) => { // Handle Errors here.
       //let errorCode = error.code;
       //let errorMessage = error.message;
@@ -90,11 +93,14 @@ const SignIn = (props) => {
                      class={style.signInImg}
                      src="../../assets/icons/favicon.png"
                      width="128" />
-        <div style="display:inline-block;">
-        <button class={style.button} onClick={renderRedirect}>ODB</button>
-        <button class={style.button}
-             onClick={() => renderFirePopup(auth, googleAuthProvider)}>
-             Google</button></div>
+        { user.saveAgree &&
+          <div style="display:inline-block;">
+            <button class={style.button} onClick={renderRedirect}>ODB</button>
+            <button class={style.button}
+               onClick={() => renderFirePopup(auth, googleAuthProvider)}>
+               Google</button>
+          </div>
+        }
         { state.popup && state.redirect !== '' &&
           <Popup
             srcurl={state.redirect}

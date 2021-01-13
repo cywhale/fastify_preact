@@ -1,5 +1,6 @@
 
-export default async function sessionInfo(url, action, userCallback, method='POST', body={action: action}) {
+export default async function sessionInfo(url, action, ucode, method='POST',
+                                          body={action: action}, userCallback) {
     let headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Accept', 'application/json');
@@ -13,24 +14,22 @@ export default async function sessionInfo(url, action, userCallback, method='POS
         withCredentials: true,
         headers: headers,
         body: JSON.stringify(body)
-        //{
-        //action: action
-          //cookies: 'ucode',
-          //value: ucstr
-        //})
+        //{ action: action })
       })
       .then((res) => {
-        //console.log("Debug get cookie response: ", res);
-        return(
-          userCallback((preState) => ({
-            ...preState,
-            //res: res,
-            session: action,
-          }))
-        )
+        userCallback((preState) => ({
+          ...preState,
+          session: action,
+          token: res.ok? ucode: '',
+        }))
+        if (!res.ok) {
+          alert("Sorry. We have trouble when checking token authority internally. You still can login and use preferred settings that have no privacy/authroized issues. Please contact us if this situation continuously happens.");
+        }
+        return(res.ok);
       });
     } catch(err) {
       console.log("Auth failed when ", action, err);
+      return(false);
     }
   };
 
