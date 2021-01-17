@@ -1,5 +1,5 @@
 'use strict'
-const boom = require('boom');
+//const boom = require('boom');
 const { createSigner, createVerifier } = require('fast-jwt'); //createDecoder
 
 const createToken = (secret, payload) => {
@@ -72,6 +72,7 @@ exports.setToken = async (req, res, secret, verify) => {
       .code(200)
       .send({'success': 'Init token'})
   } catch (err) {
-    throw boom.boomify(err)
+    //throw boom.boomify(err)
+    console.log("setToken response error: ", err);
   }
 }

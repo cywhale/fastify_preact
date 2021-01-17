@@ -9,9 +9,10 @@ const fs = require('fs');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
 const devTestPort = 3003; // need nginx pass proxy to separate server/client to test /sessioninfo
-const db = require('./config/db')
-const routes = require('./routes/postRoutes');
-const sessionJwt = require('./controller/sessionJwt');
+//const env = process.env.NODE_ENV || "development"
+//const db = require('./config/db') //mongoose
+//const routes = require('./routes/postRoutes'); //mongoose
+const sessionJwt = require('./sessionJwt');
 const { credentials } = require('./config/credentials');
 const { cookieSecret } = credentials
 const sessiondir = '/sessioninfo';
@@ -41,11 +42,26 @@ const startServer = async () => {
       logger: true
   })
 
+  const { connectionString } = credentials.mongo
+  if (!connectionString) {
+    console.error('MongoDB connection string missing!')
+    process.exit(1)
+  }
 //fasitfy.register(plugins, opts)
+  try { //await app.register(db); //mongoose
+    await app.register(require('fastify-mongodb'), {
+      forceClose: true,
+      url: connectionString,
+      name: 'mongo1'
+    })
+  } catch (err) {
+    app.log.info('Try connect db error: ' + err);
+  }
+
   try {
-   await app.register(db);
-  } catch {
-    app.log.info('Try connect db error');
+    await app.register(require('./layersearch'), { prefix: sessiondir + '/layersearch' })
+  } catch (err) {
+    app.log.info('Register route error: ' + err);
   }
 /*try {
     await app.register(require('fastify-cors'), {
@@ -86,8 +102,8 @@ const startServer = async () => {
   //    secret: "just-test-secret",
   //    parseOptions: {}
   //});
-  } catch {
-    app.log.info('Try reg fastify-cookie error');
+  } catch (err) {
+    app.log.info('Try reg fastify-cookie error' + err);
   }
 
 //fastify.get(url, opts={schema:{...}}, handler) ==> fastify.route({method:, url:, schemal:, handler:...})
@@ -107,8 +123,8 @@ const startServer = async () => {
       }
       next();
     });
-  } catch {
-    app.log.info('Try .br, .gz got error');
+  } catch (err) {
+    app.log.info('Try .br, .gz got error: ' + err);
   }
 
   if (PORT !== devTestPort) { // for testing
@@ -122,8 +138,8 @@ const startServer = async () => {
           names: ['index', 'index.html', '/']
         }*/
       });
-    } catch {
-      app.log.info('Try serve ui/build error');
+    } catch (err) {
+      app.log.info('Try serve ui/build error: ' + err);
     }
   }
 
@@ -150,7 +166,7 @@ const startServer = async () => {
       }
     });
   } catch (err) {
-    app.log.info('Sent init cookie error', err);
+    app.log.info('Sent init cookie error' + err);
   }
 
   try {
@@ -174,8 +190,27 @@ const startServer = async () => {
       }
     });
   } catch (err) {
-    app.log.info('Verify after login error', err);
+    app.log.info('Verify after login error' + err);
   }
+/*
+  const { db } = app.mongo.mongo1
+  const layerprops = db.collection('layerprops')
+
+  try {
+    await app.get('/sessioninfo/search/:name', (req, res) => {
+      console.log("req.param: ", req.params);
+      layerprops.findOne(
+        { value: req.params.name },
+        onFind
+      )
+      async function onFind (err, layer) {
+        await res.send(err || layer)
+      }
+    })
+  } catch (err) {
+    app.log.info('Search in mongo error' + err);
+  }
+*/
 /*
   try {
     await app.addHook('onRequest', (req) => {
@@ -194,7 +229,7 @@ const startServer = async () => {
   } catch {
     app.log.info('Cookie verify error');
   }
-*/
+//old: separate routes in file when using mongoose
   try {
     await routes.forEach((route, index) => {
       app.route(route)
@@ -202,7 +237,7 @@ const startServer = async () => {
   } catch {
     app.log.info('Try serve each route error');
   }
-
+*/
   const start = async () => {
     try {
       await app.listen(PORT)
