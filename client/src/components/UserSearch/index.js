@@ -16,7 +16,7 @@ const UserSearch = () => {
     let headers = new Headers();
     headers.append('Content-Type', 'application/json; charset=utf-8');
     headers.append('Accept', 'application/json');
-    let searchurl = 'sessioninfo/layersearch/' + searchtxt;
+    let searchurl = 'search/layers/' + searchtxt;
 
     try {
       await fetch(searchurl, {
@@ -31,7 +31,9 @@ const UserSearch = () => {
       .then(res => res.json())
       .then(json => {
         let data = JSON.stringify(json);
-        console.log('result:', data);
+        if (data === null || data === '' || data === '{}' || data === '[]') {
+          return(setResult('Layer not found!'));
+        }
         return(
           setResult(data)
         );

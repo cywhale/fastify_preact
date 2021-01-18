@@ -59,7 +59,7 @@ const startServer = async () => {
   }
 
   try {
-    await app.register(require('./layersearch'), { prefix: sessiondir + '/layersearch' })
+    await app.register(require('./layersearch'), { prefix: '/search/layers' })
   } catch (err) {
     app.log.info('Register route error: ' + err);
   }
