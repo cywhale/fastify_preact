@@ -50,10 +50,10 @@
     "zlib": "^1.0.5"
   },
   "dependencies": {
-    "firebase": "^8.2.1",
+    "firebase": "8.2.3",
     "history": "^5.0.0",
     "nanoid": "^3.1.16",
-    "preact": "^10.5.7",
+    "preact": "10.5.10",
     "preact-router": "^3.2.1",
     "react-dropdown-tree-select": "^2.5.1",
     "react-indexed-db": "^1.0.12",

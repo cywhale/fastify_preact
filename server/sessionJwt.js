@@ -73,6 +73,6 @@ exports.setToken = async (req, res, secret, verify) => {
       .send({'success': 'Init token'})
   } catch (err) {
     //throw boom.boomify(err)
-    console.log("setToken response error: ", err);
+    req.log.info("setToken response error: ", err);
   }
 }

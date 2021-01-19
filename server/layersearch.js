@@ -39,7 +39,7 @@ module.exports = async function layersearch (app, opts, next) {
       ).toArray(async (err, layer) => {
       //async function onFind (err, layer) {
         if (err) {
-          console.log("Error when searching in Mongo: ", err);
+          req.log.info("Error when searching in Mongo: ", err);
           await reply.send({});
         } else {
           //await console.log("layers found in Mongo: ", layer);
