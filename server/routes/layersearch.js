@@ -1,5 +1,8 @@
-module.exports = async function layersearch (app, opts, next) {
-  const { db } = app.mongo.mongo1;
+//import S from 'fluent-json-schema'
+export const autoPrefix = '/search/layers'
+
+export default async function layersearch (fastify, opts, next) {
+  const { db } = fastify.mongo.mongo1;
   const layerprops = db.collection('layerprops');
 //can refer: https://github.com/Cristiandi/demo-fastify/blob/master/src/routes/api/persons/schemas.js
 //see: https://developer.ibm.com/tutorials/learn-nodejs-mongodb/
@@ -11,25 +14,28 @@ module.exports = async function layersearch (app, opts, next) {
               format: { type: 'string' },
               metagroup: { type: 'string' }
             };
-  try {
-    await app.get('/:name', {
+    fastify.get('/:name', {
       schema: {
         tags: ['layers'],
         response: {
-          200: {
-            type: 'array',
-            items: {
-              type: 'object',
-              //required: ['value', 'label', 'type', 'format'],
-              properties: selLayerSchema
+          200: /*S.object()
+            .prop('value', S.string())
+            .prop('label', S.string())
+            .prop('type',  S.string())
+            .prop('format', S.string())
+            .prop('metagroup', S.string()) */
+            {
+              type: 'array',
+              items: {
+                type: 'object',
+                //required: ['value', 'label', 'type', 'format'],
+                properties: selLayerSchema
             }
           }
         }
       }
     },
     (req, reply) => {
-      //console.log("req.param: ", req.params);
-      //const layers =
       layerprops.find({$or:[
         {value: {$regex: req.params.name, $options: "ix"} },
         {label: {$regex: req.params.name, $options: "ix"} },
@@ -42,13 +48,10 @@ module.exports = async function layersearch (app, opts, next) {
           req.log.info("Error when searching in Mongo: ", err);
           await reply.send({});
         } else {
-          //await console.log("layers found in Mongo: ", layer);
+          //console.log("layers found in Mongo: ", layer);
           await reply.send(layer);
         }
       })
     })
-  } catch (err) {
-    app.log.info('Error when trying to search: ', err);
-  }
   next()
 }
