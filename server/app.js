@@ -1,31 +1,27 @@
 import AutoLoad from 'fastify-autoload'
-import Sensible from 'fastify-sensible'
-import Cors from 'fastify-cors'
-import UnderPressure from 'under-pressure'
-//import Env from 'fastify-env' //must in top (server.js)
-//import S from 'fluent-json-schema'
-import Cookie from 'fastify-cookie'
 import Mongodb from 'fastify-mongodb'
+//import Sensible from 'fastify-sensible'
+//import UnderPressure from 'under-pressure'
+import Cors from 'fastify-cors'
+import Cookie from 'fastify-cookie'
 import { join } from 'desm'
 
 export default async function (fastify, opts) {
-
   fastify.decorate('conf', {
     node_env: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3000,
     devTestPort: 3003,
-    sessiondir: '/sessioninfo'
+    sessiondir: process.env.NODE_ENV === 'production'? '/session' : '/sessioninfo'
   })
 
-  fastify.register(Sensible)
-
+/*fastify.register(Sensible)
   fastify.register(UnderPressure, {
     maxEventLoopDelay: 1000,
     maxHeapUsedBytes: 1000000000,
     maxRssBytes: 1000000000,
     maxEventLoopUtilization: 0.98
   })
-
+*/
   fastify.register(Cors, {
     origin: false
   })

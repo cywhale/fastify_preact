@@ -10,17 +10,16 @@ import { join } from 'desm'
 import App from './app.js'
 
 async function configSecServ(certDir='config') {
-  //const __dirname = path.resolve();
   const readCertFile = (filename) => {
-    return readFileSync(join(import.meta.url, certDir, filename)) //path.join(__dirname, certDir, filename))
+    return readFileSync(join(import.meta.url, certDir, filename))
   }
   try {
     const [key, cert] = await Promise.all(
       [readCertFile('privkey.pem'), readCertFile('fullchain.pem')]
     )
     return {key, cert, allowHTTP1: true}
-  } catch {
-    console.log("Certifite pem error...");
+  } catch (err) {
+    console.log('Error: certifite failed. ' + err);
     process.exit(1)
   }
 }
@@ -32,23 +31,21 @@ const startServer = async () => {
       http2: true,
       trustProxy: true,
       https: {key, cert, allowHTTP1},
+      requestTimeout: 5000,
       logger: true
   })
 
   fastify.register(Env, {
-  //confKey: 'config',
     dotenv: {
-      path: join(import.meta.url, '.env'), //`${__dirname}/.env`,
+      path: join(import.meta.url, 'config' ,'.env'),
     //debug: true
     },
     schema: S.object()
-      //.prop('NODE_ENV', S.string().required())
       .prop('COOKIE_SECRET', S.string().required())
       .prop('MONGO_CONNECT', S.string().required())
       .valueOf()
   }).ready((err) => {
     if (err) console.error(err)
-  //console.log("fastify config: ", fastify.config)
   })
 
   fastify.register(App)

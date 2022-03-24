@@ -30,3 +30,5 @@
 **/cesium_css_modify.sh
 **/.testenv.js
 **/distdll
+**/.ssologin.js
+**/src/template.html
